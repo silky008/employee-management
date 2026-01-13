@@ -2,6 +2,11 @@
   <div>
     <h1>Dashboard</h1>
     <p v-if="user">Welcome, {{ user.name }} ({{ user.role.name }})</p>
+
+    <!-- admin only link-->
+    <div v-if="user && user.role.name === 'admin'">
+      <router-link to="/users">Manage Users</router-link>
+    </div>
     <button @click="logout">Logout</button>
   </div>
 </template>
