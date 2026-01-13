@@ -14,11 +14,20 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const users = ref({ data: [] });
 
 onMounted(async () => {
-  const res = await api.get("/users");
-  users.value = res.data;
+  try {
+    const res = await api.get("/users");
+    users.value = res.data;
+  } catch (error) {
+    if (error.response && error.response.status === 403) {
+      router.push("/403");
+    }
+  }
 });
 </script>
