@@ -1,40 +1,69 @@
 <template>
-  <div>
-    <h1>Dashboard</h1>
-    <p v-if="user">Welcome, {{ user.name }} ({{ user.role.name }})</p>
+  <div class="p-6">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold">Dashboard</h1>
 
-    <!-- admin only link-->
-    <div v-if="user && user.role.name === 'admin'">
-      <router-link to="/users">Manage Users</router-link>
+      <button
+        @click="logout"
+        class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+      >
+        Logout
+      </button>
     </div>
-    <button @click="logout">Logout</button>
+
+    <div v-if="user" class="bg-white shadow rounded-lg p-6 mb-6">
+      <p class="text-lg">
+        Welcome,
+        <span class="font-semibold">{{ user.name }}</span>
+      </p>
+      <p class="text-sm text-gray-600">Role: {{ user.role.name }}</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-2">Users</h2>
+        <p class="text-sm text-gray-600 mb-4">
+          Manage application users and roles.
+        </p>
+
+        <router-link
+          to="/users"
+          class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
+          Manage Users
+        </router-link>
+      </div>
+
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-semibold mb-2">Profile</h2>
+        <p class="text-sm text-gray-600 mb-4">
+          View and update your profile information.
+        </p>
+
+        <button class="bg-gray-200 px-4 py-2 rounded" disabled>
+          Coming Soon
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import api from "@/services/api";
 import { useRouter } from "vue-router";
-import api from "../services/api";
 
-const router = useRouter();
 const user = ref(null);
+const router = useRouter();
 
-const fetchUser = async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await api.get("/me");
-    user.value = response.data;
-  } catch (err) {
-    console.error(err);
-    router.push("/login"); // redirect if not authenticated
-  }
-};
+onMounted(async () => {
+  const res = await api.get("/me");
+  user.value = res.data;
+});
 
-const logout = () => {
+const logout = async () => {
+  await api.post("/logout");
   localStorage.removeItem("token");
   router.push("/login");
 };
-
-onMounted(fetchUser);
 </script>
