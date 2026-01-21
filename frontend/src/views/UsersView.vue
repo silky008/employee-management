@@ -2,6 +2,12 @@
   <div class="p-6">
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">Users</h2>
+      <button
+        @click="openCreateModal"
+        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+      >
+        Add User
+      </button>
     </div>
 
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
@@ -55,6 +61,58 @@
       </button>
     </div>
   </div>
+
+  <!-- Create User Modal -->
+  <div
+    v-if="showCreate"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h3 class="text-xl font-bold mb-4">Create User</h3>
+
+      <form @submit.prevent="createUser" class="space-y-4">
+        <input
+          v-model="form.name"
+          placeholder="Name"
+          class="w-full border p-2 rounded"
+        />
+        <input
+          v-model="form.email"
+          placeholder="Email"
+          class="w-full border p-2 rounded"
+        />
+        <input
+          v-model="form.password"
+          type="password"
+          placeholder="Password"
+          class="w-full border p-2 rounded"
+        />
+
+        <select v-model="form.role_id" class="w-full border p-2 rounded">
+          <option value="">Select Role</option>
+          <option value="1">Admin</option>
+          <option value="2">Manager</option>
+          <option value="3">Employee</option>
+        </select>
+
+        <div class="flex justify-end space-x-2">
+          <button
+            type="button"
+            @click="showCreate = false"
+            class="px-4 py-2 bg-gray-200 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -68,6 +126,26 @@ const users = ref({ data: [] });
 const page = ref(1);
 const lastPage = ref(1);
 
+const showCreate = ref(false);
+const form = ref({
+  name: "",
+  email: "",
+  password: "",
+  role_id: "",
+});
+
+const openCreateModal = () => {
+  showCreate.value = true;
+};
+const createUser = async () => {
+  try {
+    await api.post("/users", form.value);
+    showCreate.value = false;
+    fetchUsers(); // refresh list
+  } catch (error) {
+    alert("Error creating user");
+  }
+};
 const fetchUsers = async () => {
   try {
     const res = await api.get(`/users?page=${page.value}`);
