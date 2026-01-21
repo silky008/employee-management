@@ -3,6 +3,7 @@
     <div class="flex justify-between items-center mb-6">
       <h2 class="text-2xl font-bold">Users</h2>
       <button
+        v-if="currentUser && currentUser.role.name === 'admin'"
         @click="openCreateModal"
         class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
       >
@@ -121,6 +122,7 @@ import api from "@/services/api";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
+const currentUser = ref(null);
 
 const users = ref({ data: [] });
 const page = ref(1);
@@ -163,5 +165,10 @@ const changePage = (newPage) => {
   fetchUsers();
 };
 
-onMounted(fetchUsers);
+onMounted(async () => {
+  const me = await api.get("/me");
+  currentUser.value = me.data;
+
+  fetchUsers();
+});
 </script>
