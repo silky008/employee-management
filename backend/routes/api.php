@@ -31,6 +31,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store'])->middleware('can:isAdmin');
 
     Route::get('/me', function (Request $request) {
         return $request->user()->load('role');
