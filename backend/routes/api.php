@@ -33,7 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store'])->middleware('can:isAdmin');
     Route::Put('/users/{id}', [UserController::class, 'update'])->middleware('can:isAdmin');
-
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->middleware('can:isAdmin');
     Route::get('/me', function (Request $request) {
         return $request->user()->load('role');
     });

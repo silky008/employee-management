@@ -52,4 +52,21 @@ class UserController extends Controller
         return response()->json($user);
     }
 
+    public function destroy($id)
+    {
+        // Prevent deleting yourself (VERY GOOD PRACTICE)
+        if (auth()->id() == $id) {
+            return response()->json([
+                'message' => 'You cannot delete your own account',
+            ], 403);
+        }
+
+        $user = User::findOrFail($id);
+        $user->delete();
+
+        return response()->json([
+            'message' => 'User deleted successfully',
+        ]);
+    }
+
 }
