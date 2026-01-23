@@ -36,6 +36,14 @@
             <td class="px-6 py-4">
               {{ user.role.name }}
             </td>
+            <td>
+              <button
+                @click="openEditModal(user)"
+                class="px-2 py-1 text-white bg-yellow-500 rounded hover:bg-yellow-600"
+              >
+                Edit
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -114,6 +122,51 @@
       </form>
     </div>
   </div>
+
+  <!-- Edit User Modal -->
+  <div
+    v-if="showEdit"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+  >
+    <div class="bg-white rounded-lg p-6 w-full max-w-md">
+      <h3 class="text-xl font-bold mb-4">Edit User</h3>
+
+      <form @submit.prevent="updateUser" class="space-y-4">
+        <input
+          v-model="editForm.name"
+          placeholder="Name"
+          class="w-full border p-2 rounded"
+        />
+        <input
+          v-model="editForm.email"
+          placeholder="Email"
+          class="w-full border p-2 rounded"
+        />
+
+        <select v-model="editForm.role_id" class="w-full border p-2 rounded">
+          <option value="1">Admin</option>
+          <option value="2">Manager</option>
+          <option value="3">Employee</option>
+        </select>
+
+        <div class="flex justify-end space-x-2">
+          <button
+            type="button"
+            @click="showEdit = false"
+            class="px-4 py-2 bg-gray-200 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded"
+          >
+            Update
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -136,8 +189,28 @@ const form = ref({
   role_id: "",
 });
 
+const showEdit = ref(false);
+const editForm = ref({
+  id: null,
+  name: "",
+  email: "",
+
+  role_id: "",
+});
+
 const openCreateModal = () => {
   showCreate.value = true;
+};
+
+const openEditModal = (user) => {
+  editForm.value = {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+
+    role_id: user.role.id,
+  };
+  showEdit.value = true;
 };
 const createUser = async () => {
   try {
@@ -146,6 +219,21 @@ const createUser = async () => {
     fetchUsers(); // refresh list
   } catch (error) {
     alert("Error creating user");
+  }
+};
+
+const updateUser = async () => {
+  try {
+    await api.put(`/users/${editForm.value.id}`, {
+      name: editForm.value.name,
+      email: editForm.value.email,
+      role_id: editForm.value.role_id,
+    });
+
+    showEdit.value = false;
+    fetchUsers();
+  } catch (error) {
+    alert("Error updating user");
   }
 };
 const fetchUsers = async () => {
