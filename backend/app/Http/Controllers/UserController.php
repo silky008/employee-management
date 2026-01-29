@@ -9,10 +9,30 @@ class UserController extends Controller
 {
     //
 
-    public function index()
+    public function index(Request $request)
     {
-        $this->authorize('viewAny', User::class);
-        return User::with('role')->paginate(10);
+        $query = User::with('role');
+
+        // 🔹 Search by name or email
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%$search%")
+                    ->orWhere('email', 'like', "%$search%");
+            });
+        }
+
+        // 🔹 Filter by role
+        if ($request->has('role') && $request->role != '') {
+            $query->whereHas('role', function ($q) use ($request) {
+                $q->where('name', $request->role);
+            });
+        }
+
+        // 🔹 Pagination (10 per page)
+        $users = $query->paginate(10);
+
+        return response()->json($users);
     }
 
     public function store(Request $request)
