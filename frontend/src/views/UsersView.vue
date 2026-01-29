@@ -38,11 +38,28 @@
         </thead>
 
         <tbody>
-          <tr v-if="users.data.length === 0">
+          <!-- Loading Skeleton -->
+          <tr v-if="loading" v-for="i in 5" :key="i">
+            <td class="px-6 py-4">
+              <div class="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="h-4 bg-gray-200 rounded animate-pulse w-48"></div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+            </td>
+            <td class="px-6 py-4">
+              <div class="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+            </td>
+          </tr>
+          <!-- No Data -->
+          <tr v-else-if="users.data.length === 0">
             <td colspan="4" class="text-center py-6 text-gray-500">
               No users found
             </td>
           </tr>
+          <!-- Real Data -->
           <tr
             v-for="user in users.data"
             :key="user.id"
@@ -82,7 +99,7 @@
       class="flex justify-center mt-6 gap-2 items-center"
     >
       <button
-        :disabled="currentPage <= 1"
+        :disabled="loading || currentPage <= 1"
         @click="fetchUsers(currentPage - 1)"
         class="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed"
       >
@@ -94,7 +111,7 @@
       </span>
 
       <button
-        :disabled="currentPage >= lastPage"
+        :disabled="loading || currentPage >= lastPage"
         @click="fetchUsers(currentPage + 1)"
         class="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed"
       >
@@ -235,7 +252,7 @@ import { useRouter } from "vue-router";
 import { watch } from "vue";
 import { computed } from "vue";
 const hasUsers = computed(() => users.value.data.length > 0);
-
+const loading = ref(false);
 const router = useRouter();
 const currentUser = ref(null);
 
@@ -322,6 +339,7 @@ const confirmDelete = async () => {
 };
 const fetchUsers = async (page = 1) => {
   try {
+    loading.value = true;
     const res = await api.get(`/users`, {
       params: {
         search: search.value,
@@ -336,6 +354,8 @@ const fetchUsers = async (page = 1) => {
     if (error.response && error.response.status === 403) {
       router.push("/403");
     }
+  } finally {
+    loading.value = false;
   }
 };
 
