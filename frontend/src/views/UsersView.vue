@@ -10,7 +10,23 @@
         Add User
       </button>
     </div>
+    <div class="flex gap-4 mb-4">
+      <!-- Search -->
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Search by name or email"
+        class="border p-2 rounded w-64"
+      />
 
+      <!-- Role Filter -->
+      <select v-model="roleFilter" class="border p-2 rounded">
+        <option value="">All Roles</option>
+        <option value="admin">Admin</option>
+        <option value="manager">Manager</option>
+        <option value="employee">Employee</option>
+      </select>
+    </div>
     <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
       <table class="w-full text-sm text-left text-gray-500">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -56,21 +72,21 @@
     </div>
 
     <!-- Pagination -->
-    <div class="flex justify-between items-center mt-6">
+    <div class="flex justify-center mt-6 gap-2">
       <button
-        @click="changePage(page - 1)"
-        :disabled="page === 1"
-        class="px-4 py-2 text-sm bg-gray-200 rounded disabled:opacity-50"
+        :disabled="currentPage === 1"
+        @click="fetchUsers(currentPage - 1)"
+        class="px-3 py-1 border rounded disabled:opacity-50"
       >
-        Previous
+        Prev
       </button>
 
-      <span class="text-sm"> Page {{ page }} of {{ lastPage }} </span>
+      <span class="px-3 py-1"> Page {{ currentPage }} of {{ lastPage }} </span>
 
       <button
-        @click="changePage(page + 1)"
-        :disabled="page === lastPage"
-        class="px-4 py-2 text-sm bg-gray-200 rounded disabled:opacity-50"
+        :disabled="currentPage === lastPage"
+        @click="fetchUsers(currentPage + 1)"
+        class="px-3 py-1 border rounded disabled:opacity-50"
       >
         Next
       </button>
@@ -206,13 +222,13 @@
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import { useRouter } from "vue-router";
+import { watch } from "vue";
 
 const router = useRouter();
 const currentUser = ref(null);
 
 const users = ref({ data: [] });
 const page = ref(1);
-const lastPage = ref(1);
 
 const showCreate = ref(false);
 const form = ref({
@@ -233,6 +249,11 @@ const editForm = ref({
 
 const showDelete = ref(false);
 const deleteUserId = ref(null);
+
+const search = ref("");
+const roleFilter = ref("");
+const currentPage = ref("");
+const lastPage = ref(1);
 
 const openDeleteModal = (user) => {
   deleteUserId.value = user.id;
@@ -287,10 +308,17 @@ const confirmDelete = async () => {
     alert(error.response?.data?.message || "Delete failed");
   }
 };
-const fetchUsers = async () => {
+const fetchUsers = async (page = 1) => {
   try {
-    const res = await api.get(`/users?page=${page.value}`);
+    const res = await api.get(`/users`, {
+      params: {
+        search: search.value,
+        role: roleFilter.value,
+        page: page,
+      },
+    });
     users.value = res.data;
+    currentPage.value = res.data.meta.current_page;
     lastPage.value = res.data.meta.last_page;
   } catch (error) {
     if (error.response && error.response.status === 403) {
@@ -309,5 +337,9 @@ onMounted(async () => {
   currentUser.value = me.data;
 
   fetchUsers();
+});
+
+watch([search, roleFilter], () => {
+  fetchUsers(1);
 });
 </script>
