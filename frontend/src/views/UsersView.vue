@@ -38,6 +38,11 @@
         </thead>
 
         <tbody>
+          <tr v-if="users.data.length === 0">
+            <td colspan="4" class="text-center py-6 text-gray-500">
+              No users found
+            </td>
+          </tr>
           <tr
             v-for="user in users.data"
             :key="user.id"
@@ -72,7 +77,10 @@
     </div>
 
     <!-- Pagination -->
-    <div class="flex justify-center mt-6 gap-2 items-center">
+    <div
+      v-if="users.data.length > 0"
+      class="flex justify-center mt-6 gap-2 items-center"
+    >
       <button
         :disabled="currentPage <= 1"
         @click="fetchUsers(currentPage - 1)"
@@ -225,6 +233,8 @@ import { ref, onMounted } from "vue";
 import api from "@/services/api";
 import { useRouter } from "vue-router";
 import { watch } from "vue";
+import { computed } from "vue";
+const hasUsers = computed(() => users.value.data.length > 0);
 
 const router = useRouter();
 const currentUser = ref(null);
