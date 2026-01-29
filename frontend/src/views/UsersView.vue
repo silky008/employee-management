@@ -72,21 +72,23 @@
     </div>
 
     <!-- Pagination -->
-    <div class="flex justify-center mt-6 gap-2">
+    <div class="flex justify-center mt-6 gap-2 items-center">
       <button
-        :disabled="currentPage === 1"
+        :disabled="currentPage <= 1"
         @click="fetchUsers(currentPage - 1)"
-        class="px-3 py-1 border rounded disabled:opacity-50"
+        class="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Prev
       </button>
 
-      <span class="px-3 py-1"> Page {{ currentPage }} of {{ lastPage }} </span>
+      <span class="px-3 py-1 font-medium">
+        Page {{ currentPage }} of {{ lastPage }}
+      </span>
 
       <button
-        :disabled="currentPage === lastPage"
+        :disabled="currentPage >= lastPage"
         @click="fetchUsers(currentPage + 1)"
-        class="px-3 py-1 border rounded disabled:opacity-50"
+        class="px-3 py-1 border rounded disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Next
       </button>
@@ -252,7 +254,7 @@ const deleteUserId = ref(null);
 
 const search = ref("");
 const roleFilter = ref("");
-const currentPage = ref("");
+const currentPage = ref(1);
 const lastPage = ref(1);
 
 const openDeleteModal = (user) => {
