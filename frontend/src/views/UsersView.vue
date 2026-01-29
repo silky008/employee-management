@@ -38,21 +38,23 @@
         </thead>
 
         <tbody>
-          <!-- Loading Skeleton -->
-          <tr v-if="loading" v-for="i in 5" :key="i">
-            <td class="px-6 py-4">
-              <div class="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="h-4 bg-gray-200 rounded animate-pulse w-48"></div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
-            </td>
-            <td class="px-6 py-4">
-              <div class="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
-            </td>
-          </tr>
+          <!-- Loading -->
+          <template v-if="loading">
+            <tr v-for="i in 5" :key="i">
+              <td class="px-6 py-4">
+                <div class="h-4 bg-gray-200 rounded animate-pulse w-32"></div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="h-4 bg-gray-200 rounded animate-pulse w-48"></div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="h-4 bg-gray-200 rounded animate-pulse w-24"></div>
+              </td>
+              <td class="px-6 py-4">
+                <div class="h-4 bg-gray-200 rounded animate-pulse w-20"></div>
+              </td>
+            </tr>
+          </template>
           <!-- No Data -->
           <tr v-else-if="users.data.length === 0">
             <td colspan="4" class="text-center py-6 text-gray-500">
@@ -61,6 +63,7 @@
           </tr>
           <!-- Real Data -->
           <tr
+            v-else
             v-for="user in users.data"
             :key="user.id"
             class="bg-white border-b hover:bg-gray-50"
@@ -340,6 +343,7 @@ const confirmDelete = async () => {
 const fetchUsers = async (page = 1) => {
   try {
     loading.value = true;
+    users.value = { data: [] }; // ✅ Clear old rows immediately
     const res = await api.get(`/users`, {
       params: {
         search: search.value,
