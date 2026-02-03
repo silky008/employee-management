@@ -18,6 +18,7 @@
         placeholder="Search by name or email"
         class="border p-2 rounded w-64"
       />
+      <p v-if="loading" class="text-sm text-gray-500 mt-1">Searching...</p>
 
       <!-- Role Filter -->
       <select v-model="roleFilter" class="border p-2 rounded">
@@ -263,6 +264,7 @@ const users = ref({ data: [] });
 const page = ref(1);
 
 const showCreate = ref(false);
+let debounceTimer = null;
 const form = ref({
   name: "",
   email: "",
@@ -376,6 +378,10 @@ onMounted(async () => {
 });
 
 watch([search, roleFilter], () => {
-  fetchUsers(1);
+  clearTimeout(debounceTimer);
+
+  debounceTimer = setTimeout(() => {
+    fetchUsers(1);
+  }, 500); // 500ms debounce
 });
 </script>
