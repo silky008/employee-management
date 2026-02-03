@@ -11,7 +11,9 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $query = User::with('role');
+        $sortField     = request('sort_field', 'name');
+        $sortDirection = request('sort_direction', 'asc');
+        $query         = User::with('role');
 
         // 🔹 Search by name or email
         if ($request->has('search') && $request->search != '') {
@@ -28,7 +30,7 @@ class UserController extends Controller
                 $q->where('name', $request->role);
             });
         }
-
+        $query->orderBy($sortField, $sortDirection);
         // 🔹 Pagination (10 per page)
         $users = $query->paginate(10);
 

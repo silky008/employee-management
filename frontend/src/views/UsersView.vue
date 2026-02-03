@@ -32,9 +32,26 @@
       <table class="w-full text-sm text-left text-gray-500">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
           <tr>
-            <th class="px-6 py-3">Name</th>
-            <th class="px-6 py-3">Email</th>
-            <th class="px-6 py-3">Role</th>
+            <th class="px-6 py-3 cursor-pointer" @click="sortBy('name')">
+              Name
+              <span v-if="sortField === 'name'">
+                {{ sortDirection === "asc" ? "↑" : "↓" }}
+              </span>
+            </th>
+
+            <th class="px-6 py-3 cursor-pointer" @click="sortBy('email')">
+              Email
+              <span v-if="sortField === 'email'">
+                {{ sortDirection === "asc" ? "↑" : "↓" }}
+              </span>
+            </th>
+
+            <th class="px-6 py-3 cursor-pointer" @click="sortBy('role_id')">
+              Role
+              <span v-if="sortField === 'role_id'">
+                {{ sortDirection === "asc" ? "↑" : "↓" }}
+              </span>
+            </th>
           </tr>
         </thead>
 
@@ -265,6 +282,8 @@ const page = ref(1);
 
 const showCreate = ref(false);
 let debounceTimer = null;
+const sortField = ref("name");
+const sortDirection = ref("asc");
 const form = ref({
   name: "",
   email: "",
@@ -333,6 +352,17 @@ const updateUser = async () => {
   }
 };
 
+const sortBy = (field) => {
+  if (sortField.value === field) {
+    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+  } else {
+    sortField.value = field;
+    sortDirection.value = "asc";
+  }
+
+  fetchUsers(1);
+};
+
 const confirmDelete = async () => {
   try {
     await api.delete(`/users/${deleteUserId.value}`);
@@ -351,6 +381,8 @@ const fetchUsers = async (page = 1) => {
         search: search.value,
         role: roleFilter.value,
         page: page,
+        sort_field: sortField.value,
+        sort_direction: sortDirection.value,
       },
     });
     users.value = res.data;
