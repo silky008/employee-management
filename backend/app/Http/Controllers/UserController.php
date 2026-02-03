@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -54,7 +55,18 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
             'role_id'  => $request->role_id,
         ]);
-        return response()->json($user, 201);
+        // AUDIT LOG — CREATE
+        AuditLog::create([
+            'actor_id'    => auth()->id(),
+            'action'      => 'created',
+            'target_type' => 'User',
+            'target_id'   => $user->id,
+            'changes'     => $user->toArray(),
+        ]);
+        return response()->json([
+            'message' => 'User created successfully',
+            'user'    => $user,
+        ]);
     }
 
     public function update(Request $request, User $user)
@@ -66,11 +78,22 @@ class UserController extends Controller
             'email'   => 'required|email|unique:users,email,' . $user->id,
             'role_id' => 'required|exists:roles,id',
         ]);
-
+        $oldData = $user->getOriginal();
         $user->update([
             'name'    => $request->name,
             'email'   => $request->email,
             'role_id' => $request->role_id,
+        ]);
+        // AUDIT LOG — UPDATE
+        AuditLog::create([
+            'actor_id'    => auth()->id(),
+            'action'      => 'updated',
+            'target_type' => 'User',
+            'target_id'   => $user->id,
+            'changes'     => [
+                'before' => $oldData,
+                'after'  => $user->fresh()->toArray(),
+            ],
         ]);
 
         return response()->json([
@@ -89,9 +112,16 @@ class UserController extends Controller
                 'message' => 'You cannot delete your own account',
             ], 403);
         }
-
+        $snapshot = $user->toArray();
         $user->delete();
-
+        // AUDIT LOG — DELETE
+        AuditLog::create([
+            'actor_id'    => auth()->id(),
+            'action'      => 'deleted',
+            'target_type' => 'User',
+            'target_id'   => $user->id,
+            'changes'     => $snapshot,
+        ]);
         return response()->json([
             'message' => 'User deleted successfully',
         ]);
