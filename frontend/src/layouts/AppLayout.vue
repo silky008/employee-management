@@ -5,16 +5,38 @@
       <h2 class="text-xl font-bold mb-6">My App</h2>
 
       <nav class="space-y-2">
-        <router-link to="/" class="block px-3 py-2 rounded hover:bg-gray-200">
+        <!-- Dashboard link always visible -->
+        <router-link
+          to="/"
+          :class="{
+            'bg-gray-300': route.path === '/',
+            'block px-3 py-2 rounded hover:bg-gray-200': true,
+          }"
+        >
           Dashboard
         </router-link>
 
+        <!-- Manage Users (Admin only) -->
         <router-link
           v-if="user && user.role.name === 'admin'"
           to="/users"
-          class="block px-3 py-2 rounded hover:bg-gray-200"
+          :class="{
+            'bg-gray-300': route.path === '/users',
+            'block px-3 py-2 rounded hover:bg-gray-200': true,
+          }"
         >
           Manage Users
+        </router-link>
+        <!-- Audit Logs (Admin only) -->
+        <router-link
+          v-if="user && user.role.name === 'admin'"
+          to="/audit-logs"
+          :class="{
+            'bg-gray-300': route.path === '/audit-logs',
+            'block px-3 py-2 rounded hover:bg-gray-200': true,
+          }"
+        >
+          Audit Logs
         </router-link>
       </nav>
     </aside>
