@@ -11,7 +11,7 @@ class UserPolicy
     public function viewAny(User $user)
     {
         //
-        return $user->role->name === 'admin';
+        return in_array($user->role->name, ['admin', 'manager']);
     }
 
     /**
@@ -28,6 +28,7 @@ class UserPolicy
     public function create(User $user)
     {
         //
+        return $user->role->name === 'admin';
     }
 
     /**
@@ -36,6 +37,7 @@ class UserPolicy
     public function update(User $user, User $model)
     {
         //
+        return $user->role->name === 'admin';
     }
 
     /**
@@ -44,6 +46,7 @@ class UserPolicy
     public function delete(User $user, User $model)
     {
         //
+        return $user->role->name === 'admin';
     }
 
     /**

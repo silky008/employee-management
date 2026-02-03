@@ -11,6 +11,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', User::class);
         $sortField     = request('sort_field', 'name');
         $sortDirection = request('sort_direction', 'asc');
         $query         = User::with('role');
@@ -39,6 +40,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', User::class);
         $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
@@ -55,13 +57,13 @@ class UserController extends Controller
         return response()->json($user, 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
+        $this->authorize('update', $user);
 
         $request->validate([
             'name'    => 'required|string|max:255',
-            'email'   => 'required|email|unique:users,email,' . $id,
+            'email'   => 'required|email|unique:users,email,' . $user->id,
             'role_id' => 'required|exists:roles,id',
         ]);
 
@@ -71,19 +73,23 @@ class UserController extends Controller
             'role_id' => $request->role_id,
         ]);
 
-        return response()->json($user);
+        return response()->json([
+            'message' => 'User updated successfully',
+            'user'    => $user,
+        ]);
     }
 
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        // Prevent deleting yourself (VERY GOOD PRACTICE)
-        if (auth()->id() == $id) {
+        $this->authorize('delete', $user);
+
+        // Prevent deleting yourself
+        if (auth()->id() === $user->id) {
             return response()->json([
                 'message' => 'You cannot delete your own account',
             ], 403);
         }
 
-        $user = User::findOrFail($id);
         $user->delete();
 
         return response()->json([
