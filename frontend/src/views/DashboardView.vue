@@ -1,48 +1,77 @@
 <template>
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-xl font-semibold mb-2">Users</h2>
-      <p class="text-sm text-gray-600 mb-4">
-        Manage application users and roles.
-      </p>
-
-      <router-link
-        to="/users"
-        class="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-      >
-        Manage Users
-      </router-link>
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="p-4 bg-white shadow rounded">
+      <h3 class="text-gray-500">Total Users</h3>
+      <p class="text-2xl font-bold">{{ stats.total_users }}</p>
     </div>
+  </div>
 
-    <div class="bg-white shadow rounded-lg p-6">
-      <h2 class="text-xl font-semibold mb-2">Profile</h2>
-      <p class="text-sm text-gray-600 mb-4">
-        View and update your profile information.
-      </p>
+  <!-- Chart -->
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="mb-4 font-semibold">Users by Role</h3>
+    <canvas id="roleChart"></canvas>
+  </div>
 
-      <button class="bg-gray-200 px-4 py-2 rounded" disabled>
-        Coming Soon
-      </button>
-    </div>
+  <!-- Recent Activity -->
+  <div class="bg-white p-4 rounded shadow">
+    <h3 class="mb-4 font-semibold">Recent Activity</h3>
+
+    <ul>
+      <li v-for="log in stats.recent_logs" :key="log.id" class="border-b py-2">
+        <strong>{{ log.actor.name }}</strong>
+        {{ log.action }}
+        user #{{ log.target_id }}
+      </li>
+    </ul>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import api from "@/services/api";
-import { useRouter } from "vue-router";
+import Chart from "chart.js/auto";
 
-const user = ref(null);
-const router = useRouter();
-
-onMounted(async () => {
-  const res = await api.get("/me");
-  user.value = res.data;
+const stats = ref({
+  total_users: 0,
+  users_by_role: [],
+  recent_logs: [],
 });
 
-const logout = async () => {
-  await api.post("/logout");
-  localStorage.removeItem("token");
-  router.push("/login");
+let chartInstance = null;
+
+const fetchStats = async () => {
+  const res = await api.get("/dashboard-stats");
+  stats.value = res.data;
+
+  renderChart();
 };
+
+const renderChart = () => {
+  const ctx = document.getElementById("roleChart");
+
+  const labels = stats.value.users_by_role.map((r) => r.role);
+  const data = stats.value.users_by_role.map((r) => r.count);
+
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Users",
+          data,
+        },
+      ],
+    },
+  });
+};
+
+onMounted(() => {
+  fetchStats();
+});
 </script>
