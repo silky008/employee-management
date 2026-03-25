@@ -1,7 +1,23 @@
 <template>
   <div class="p-6">
     <h2 class="text-2xl font-bold mb-4">Audit Logs</h2>
+    <div class="flex gap-4 mb-4">
+      <!-- Search -->
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Search by actor name"
+        class="border p-2 rounded w-64"
+      />
 
+      <!-- Action Filter -->
+      <select v-model="actionFilter" class="border p-2 rounded">
+        <option value="">All Actions</option>
+        <option value="created">Created</option>
+        <option value="updated">Updated</option>
+        <option value="deleted">Deleted</option>
+      </select>
+    </div>
     <div class="overflow-x-auto shadow-md sm:rounded-lg">
       <table class="w-full text-sm text-left text-gray-500">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
@@ -21,7 +37,17 @@
             class="bg-white border-b hover:bg-gray-50"
           >
             <td class="px-6 py-4">{{ log.actor.name }}</td>
-            <td class="px-6 py-4">{{ log.action }}</td>
+            <td class="px-6 py-4">
+              <span
+                :class="{
+                  'text-green-600': log.action === 'created',
+                  'text-blue-600': log.action === 'updated',
+                  'text-red-600': log.action === 'deleted',
+                }"
+              >
+                {{ log.action }}
+              </span>
+            </td>
             <td class="px-6 py-4">
               {{ log.target_type }} #{{ log.target_id }}
             </td>
@@ -62,16 +88,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import api from "@/services/api";
 
 const logs = ref({ data: [] });
+const search = ref("");
+const actionFilter = ref("");
 const currentPage = ref(1);
 const lastPage = ref(1);
+let debounceTimer = null;
 
 const fetchLogs = async (page = 1) => {
   try {
-    const res = await api.get("/audit-logs", { params: { page } });
+    logs.value = { data: [] };
+    const res = await api.get("/audit-logs", {
+      params: { page, search: search.value, action: actionFilter.value },
+    });
     logs.value = res.data;
     currentPage.value = res.data.meta.current_page;
     lastPage.value = res.data.meta.last_page;
@@ -79,6 +111,14 @@ const fetchLogs = async (page = 1) => {
     console.error(error);
   }
 };
+
+watch([search, actionFilter], () => {
+  clearTimeout(debounceTimer);
+
+  debounceTimer = setTimeout(() => {
+    fetchLogs(1);
+  }, 500);
+});
 
 onMounted(() => {
   fetchLogs();

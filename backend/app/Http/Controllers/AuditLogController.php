@@ -18,6 +18,13 @@ class AuditLogController extends Controller
 
         $query = AuditLog::with('actor')->latest();
 
+        // 🔍 Search by actor name
+        if ($request->filled('search')) {
+            $query->whereHas('actor', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%');
+            });
+        }
+
         // Optional: filter by action
         if ($request->filled('action')) {
             $query->where('action', $request->action);
