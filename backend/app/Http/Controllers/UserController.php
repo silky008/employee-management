@@ -1,127 +1,44 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\AuditLog;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\services\UserService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     //
 
-    public function index(Request $request)
+    public function index(Request $request, UserService $service)
     {
         $this->authorize('viewAny', User::class);
-        $sortField     = request('sort_field', 'name');
-        $sortDirection = request('sort_direction', 'asc');
-        $query         = User::with('role');
-
-        // 🔹 Search by name or email
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                    ->orWhere('email', 'like', "%$search%");
-            });
-        }
-
-        // 🔹 Filter by role
-        if ($request->has('role') && $request->role != '') {
-            $query->whereHas('role', function ($q) use ($request) {
-                $q->where('name', $request->role);
-            });
-        }
-        $query->orderBy($sortField, $sortDirection);
-        // 🔹 Pagination (10 per page)
-        $users = $query->paginate(10);
-
-        return response()->json($users);
+        $users = $service->list($request->all());
+        return UserResource::collection($users);
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request, UserService $service)
     {
         $this->authorize('create', User::class);
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
-            'role_id'  => 'required|exists:roles,id',
-
-        ]);
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role_id'  => $request->role_id,
-        ]);
-        // AUDIT LOG — CREATE
-        AuditLog::create([
-            'actor_id'    => auth()->id(),
-            'action'      => 'created',
-            'target_type' => 'User',
-            'target_id'   => $user->id,
-            'changes'     => $user->toArray(),
-        ]);
-        return response()->json([
-            'message' => 'User created successfully',
-            'user'    => $user,
-        ]);
+        $user = $service->create($request->validated());
+        return new UserResource($user);
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user, UserService $service)
     {
         $this->authorize('update', $user);
 
-        $request->validate([
-            'name'    => 'required|string|max:255',
-            'email'   => 'required|email|unique:users,email,' . $user->id,
-            'role_id' => 'required|exists:roles,id',
-        ]);
-        $oldData = $user->getOriginal();
-        $user->update([
-            'name'    => $request->name,
-            'email'   => $request->email,
-            'role_id' => $request->role_id,
-        ]);
-        // AUDIT LOG — UPDATE
-        AuditLog::create([
-            'actor_id'    => auth()->id(),
-            'action'      => 'updated',
-            'target_type' => 'User',
-            'target_id'   => $user->id,
-            'changes'     => [
-                'before' => $oldData,
-                'after'  => $user->fresh()->toArray(),
-            ],
-        ]);
+        $user = $service->update($user, $request->validated());
 
-        return response()->json([
-            'message' => 'User updated successfully',
-            'user'    => $user,
-        ]);
+        return new UserResource($user);
     }
 
-    public function destroy(User $user)
+    public function destroy(User $user, UserService $service)
     {
         $this->authorize('delete', $user);
-
-        // Prevent deleting yourself
-        if (auth()->id() === $user->id) {
-            return response()->json([
-                'message' => 'You cannot delete your own account',
-            ], 403);
-        }
-        $snapshot = $user->toArray();
-        $user->delete();
-        // AUDIT LOG — DELETE
-        AuditLog::create([
-            'actor_id'    => auth()->id(),
-            'action'      => 'deleted',
-            'target_type' => 'User',
-            'target_id'   => $user->id,
-            'changes'     => $snapshot,
-        ]);
+        $service->delete($user);
         return response()->json([
             'message' => 'User deleted successfully',
         ]);
