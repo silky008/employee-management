@@ -1,7 +1,7 @@
 <?php
 namespace App\services;
 
-use App\Models\AuditLog;
+use App\Jobs\LogAuditJob;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 
@@ -75,7 +75,7 @@ class UserService
 
     private function audit(string $action, User $user, $changes = null): void
     {
-        AuditLog::create([
+        LogAuditJob::dispatch([
             'actor_id'    => auth()->id(),
             'action'      => $action,
             'target_type' => 'User',
