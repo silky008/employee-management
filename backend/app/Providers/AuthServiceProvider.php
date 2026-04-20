@@ -1,7 +1,9 @@
 <?php
 namespace App\Providers;
 
+use App\Models\Client;
 use App\Models\User;
+use App\Policies\ClientPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -15,7 +17,8 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         //
-        User::class => UserPolicy::class,
+        User::class   => UserPolicy::class,
+        Client::class => ClientPolicy::class,
     ];
 
     /**

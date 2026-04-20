@@ -12,6 +12,9 @@ Route::get('/health', function () {
     return response()->json(['status' => 'OK',
         'message'                         => 'API is working']);
 });
+Route::get('/clients', function () {
+    return 'CLIENT ROUTE HIT';
+});
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,7 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
     Route::get('/audit-logs', [AuditLogController::class, 'index']);
     Route::get('/clients', [ClientController::class, 'index']);
-    Route::post('/clients', [ClientController::class, 'store']);
+    Route::post('/clients', [ClientController::class, 'store'])->middleware('can:isAdmin');
     Route::get('/me', function (Request $request) {
         return $request->user()->load('role');
     });
