@@ -5,7 +5,10 @@ import LoginView from "../views/LoginView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import UsersView from "../views/UsersView.vue";
 import AccessDenied from "../views/AccessDenied.vue";
+import ClientsView from "../views/ClientsView.vue";
 import api from "@/services/api";
+import ClientEdit from "../views/ClientEdit.vue";
+import ClientView from "../views/ClientView.vue";
 
 const routes = [
   // Login page
@@ -29,6 +32,25 @@ const routes = [
         component: UsersView,
         meta: { title: "Manage Users", requiresAdmin: true },
       },
+      {
+        path: "clients",
+        name: "ClientsList",
+        component: ClientsView,
+        meta: { title: "Manage Clients", requiresAdmin: true },
+      },
+      {
+        path: "clients/view/:id",
+        name: "ClientView",
+        component: ClientView,
+        meta: { title: "View Client", requiresAdmin: true },
+      },
+      {
+        path: "clients/edit/:id",
+        name: "ClientEdit",
+        component: ClientEdit,
+        meta: { title: "Edit Client", requiresAdmin: true },
+      },
+
       {
         path: "audit-logs",
         name: "AuditLogs",

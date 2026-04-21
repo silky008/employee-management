@@ -28,6 +28,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/audit-logs', [AuditLogController::class, 'index']);
     Route::get('/clients', [ClientController::class, 'index']);
     Route::post('/clients', [ClientController::class, 'store'])->middleware('can:isAdmin');
+    Route::put('/clients/{client}', [ClientController::class, 'update']);
+    Route::delete('/clients/{client}', [ClientController::class, 'destroy']);
+    Route::get('/clients/{client}', [ClientController::class, 'show']);
     Route::get('/me', function (Request $request) {
         return $request->user()->load('role');
     });

@@ -27,6 +27,16 @@
         >
           Manage Users
         </router-link>
+        <router-link
+          v-if="user && user.role.name === 'admin'"
+          to="/clients"
+          :class="{
+            'bg-gray-300': $route.path.startsWith('/clients'),
+            'block px-3 py-2 rounded hover:bg-gray-200': true,
+          }"
+        >
+          Manage Clients
+        </router-link>
         <!-- Audit Logs (Admin only) -->
         <router-link
           v-if="user && user.role.name === 'admin'"
@@ -64,26 +74,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import api from "@/services/api";
+import { computed, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { useAuth } from "@/stores/auth";
 
 const router = useRouter();
 const route = useRoute();
-const user = ref(null);
 
-const pageTitle = computed(() => {
-  return route.meta.title || "Page";
-});
+const { user, fetchUser } = useAuth();
 
-onMounted(async () => {
-  try {
-    const res = await api.get("/me");
-    user.value = res.data;
-  } catch {
-    router.push("/login");
-  }
-});
+const pageTitle = computed(() => route.meta.title || "Page");
+
+onMounted(fetchUser);
 
 const logout = async () => {
   await api.post("/logout");
